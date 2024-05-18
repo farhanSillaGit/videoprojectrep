@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Video</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .form-container p {
+            margin-bottom: 20px;
+        }
+
+        .form-container label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .form-container input[type="text"],
+        .form-container textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .form-container .dz-message {
+            margin: 20px 0;
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        .form-container button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        Dropzone.options.videoDropzone = {
+            url: "/upload/",
+            maxFilesize: 1024, // 1 GB
+            chunking: true,
+            chunkSize: 2000000, // 2 MB
+            retryChunks: true,
+            retryChunksLimit: 3,
+            acceptedFiles: '.mp4',
+            autoProcessQueue: false,
+            init: function() {
+                var myDropzone = this;
+
+                document.getElementById("submit-all").addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    myDropzone.processQueue();
+                });
+
+                this.on("sending", function(file, xhr, formData) {
+                    formData.append("csrfmiddlewaretoken", csrftoken);
+                    formData.append("title", document.getElementById("id_title").value);
+                    formData.append("content", document.getElementById("id_content").value);
+                });
+
+                this.on("queuecomplete", function() {
+                    alert("All files have been uploaded successfully");
+                    window.location.href = "/videos/"; // Redirect to the video list page
+                });
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Upload a New Video</h1>
+        <form id="videoDropzone" class="dropzone" enctype="multipart/form-data">
+            {% csrf_token %}
+            <p>
+                <label for="id_title">Title:</label>
+                <input type="text" name="title" id="id_title" required>
+            </p>
+            <p>
+                <label for="id_content">Content:</label>
+                <textarea name="content" id="id_content" required></textarea>
+            </p>
+            <div class="dz-message" data-dz-message>
+                <span>Drop files here or click to upload.</span>
+            </div>
+            <button type="submit" id="submit-all">Upload Video</button>
+        </form>
+    </div>
+</body>
+</html>
